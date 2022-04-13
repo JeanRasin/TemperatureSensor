@@ -25,18 +25,10 @@ namespace TemperatureSensor.WebUI.Controllers
             return result;
         }
 
-        [HttpPost("temperature/{temperature:int}")]
-        public async Task<IActionResult> Post(int temperature)
+        [HttpPost("temperature/{temperature:decimal}")]
+        public async Task<IActionResult> Post(decimal temperature)
         {
             await _temperatureRepository.InsertTemperature(temperature);
-
-            return Ok("Ok");
-        }
-
-        [HttpGet("ClearDB")]
-        public async Task<IActionResult> ClearDB()
-        {
-            await _temperatureRepository.ClearDB();
 
             return Ok("Ok");
         }

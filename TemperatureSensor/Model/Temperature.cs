@@ -6,6 +6,6 @@ namespace TemperatureSensor.WebUI.Model
 
         public DateTime Date { get; set; }
 
-        public int TemperatureData { get; set; }
+        public decimal TemperatureData { get; set; }
     }
 }

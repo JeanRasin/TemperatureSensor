@@ -6,9 +6,7 @@ namespace TemperatureSensor.WebUI.DAL.Repositories.Abstract
     {
         Task<IEnumerable<Temperature>> GetTemperature();
 
-        Task InsertTemperature(int temperature);
-
-        Task ClearDB();
+        Task InsertTemperature(decimal temperature);
 
         Task CreateDb();
     }

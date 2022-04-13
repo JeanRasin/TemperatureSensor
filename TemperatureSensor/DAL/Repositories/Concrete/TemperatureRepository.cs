@@ -14,11 +14,30 @@ namespace TemperatureSensor.WebUI.DAL.Repositories.Concrete
             _sqliteConnection = sqliteConnection;
         }
 
-        public async Task ClearDB()
+        public async Task<IEnumerable<Temperature>> GetTemperature()
         {
-            var sql = "DELETE FROM Temperature";
+            if (DateTime.Now.Month == 28)
+            {
+                await ClearDB();
+            }
 
-            await _sqliteConnection.QueryAsync(sql);
+            var sql = "SELECT Id, Date, TemperatureData FROM Temperature ORDER BY Id DESC LIMIT 30";
+
+            var result = await _sqliteConnection.QueryAsync<Temperature>(sql);
+
+            return result;
+        }
+
+        public async Task InsertTemperature(decimal temperature)
+        {
+            var sql = "INSERT INTO Temperature(Date, TemperatureData) Values(DATETIME('now'), @TemperatureData)";
+
+            var data = new Temperature
+            {
+                TemperatureData = temperature
+            };
+
+            await _sqliteConnection.QueryAsync(sql, data);
         }
 
         public async Task CreateDb()
@@ -26,32 +45,17 @@ namespace TemperatureSensor.WebUI.DAL.Repositories.Concrete
             var sql = $@"CREATE TABLE IF NOT EXISTS Temperature (
                   {nameof(Temperature.Id)} INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                   {nameof(Temperature.Date)} TEXT NOT NULL,
-                  {nameof(Temperature.TemperatureData)} INTEGER NOT NULL
+                  {nameof(Temperature.TemperatureData)} REAL NOT NULL
                  );";
 
             await _sqliteConnection.ExecuteAsync(sql);
         }
 
-        public async Task<IEnumerable<Temperature>> GetTemperature()
+        private async Task ClearDB()
         {
-            var sql = "SELECT Id, Date, TemperatureData FROM Temperature ORDER BY Id DESC LIMIT 2";
+            var sql = $"DELETE FROM Temperature WHERE date(Date) BETWEEN DATETIME('now', '-10 years') AND DATETIME('now', 'start of month', '-1 day')";
 
-            var result = await _sqliteConnection.QueryAsync<Temperature>(sql);
-
-            return result;
-        }
-
-        public async Task InsertTemperature(int temperature)
-        {
-            var sql = "INSERT INTO Temperature(Date, TemperatureData) Values(@Date, @TemperatureData)";
-
-            var data = new Temperature
-            {
-                Date = DateTime.Now,
-                TemperatureData = temperature
-            };
-
-            await _sqliteConnection.QueryAsync(sql, data);
+            await _sqliteConnection.QueryAsync(sql);
         }
     }
 }
