@@ -12,4 +12,8 @@
 	<PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ClientApp\" />
+  </ItemGroup>
+
 </Project>

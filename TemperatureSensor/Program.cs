@@ -42,14 +42,29 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+
+// Startup.Configure()
+//app.UseEndpoints(endpoints =>
+//{
+//    //endpoints.MapControllers();
+
+//    // route non-api urls to index.html
+//    endpoints.MapFallbackToFile("/index.html");
+//});
+
+app.MapFallbackToFile("/index.html");
+
 // global cors policy
 app.UseCors(x => x
     .AllowAnyOrigin()
     .AllowAnyMethod()
     .AllowAnyHeader());
 
-app.UseAuthentication();
-app.UseAuthorization();
+//app.UseAuthentication();
+//app.UseAuthorization();
 
 app.MapControllers();
 
