@@ -4,9 +4,11 @@ namespace TemperatureSensor.WebUI.DAL.Repositories.Abstract
 {
     public interface ITemperatureRepository
     {
-        Task<IEnumerable<Temperature>> GetTemperature();
+        Task<IEnumerable<HouseIndicator>> Get();
 
-        Task InsertTemperature(decimal temperature, decimal humidity);
+        Task Insert(decimal temperature, decimal humidity);
+
+        Task InsertRandom(int rows);
 
         Task CreateDb();
     }

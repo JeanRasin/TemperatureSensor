@@ -1,9 +1,7 @@
 using TemperatureSensor.WebUI.DAL.Repositories.Abstract;
 using TemperatureSensor.WebUI.DAL.Repositories.Concrete;
 using Microsoft.Data.Sqlite;
-using Microsoft.AspNetCore.Authentication;
 using TemperatureSensor.WebUI.Authorization;
-using Microsoft.OpenApi.Models;
 using AspNetCore.Authentication.Basic;
 using Microsoft.AspNetCore.Authorization;
 
@@ -25,12 +23,6 @@ builder.Services.AddScoped(_ => new SqliteConnection(connectionString));
 // Add the whole configuration object here.
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
-// Basic authentication
-//builder.Services.AddAuthentication("BasicAuthentication")
-//                .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>
-//                ("BasicAuthentication", null);
-
-
 builder.Services.AddAuthentication(BasicDefaults.AuthenticationScheme)
 
     // The below AddBasic without type parameter will require OnValidateCredentials delegete on options.Events to be set unless an implementation of IBasicUserValidationService interface is registered in the dependency register.
@@ -41,10 +33,10 @@ builder.Services.AddAuthentication(BasicDefaults.AuthenticationScheme)
     // Please note if OnValidateCredentials delegete on options.Events is also set then this delegate will be used instead of BasicUserValidationService.
     .AddBasic<BasicUserValidationService>(options =>
     {
-    options.Realm = "Temperature Web API";
-    options.Events = new BasicEvents
+        options.Realm = "Temperature Web API";
+        options.Events = new BasicEvents
         {
-    };
+        };
     });
 
 builder.Services.AddAuthorization(options =>
@@ -53,9 +45,6 @@ builder.Services.AddAuthorization(options =>
         .RequireAuthenticatedUser()
         .Build();
 });
-
-
-//builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -75,8 +64,6 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 //app.UseDefaultFiles();
 app.UseRouting();
-
-//app.MapFallbackToFile("index.html");
 
 // global cors policy
 app.UseCors(x => x

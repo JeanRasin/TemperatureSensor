@@ -5,7 +5,6 @@ using TemperatureSensor.WebUI.Model;
 
 namespace TemperatureSensor.WebUI.Controllers
 {
-    //
     [Route("api/[controller]")]
     [ApiController]
     public class TemperatureController : ControllerBase
@@ -20,9 +19,9 @@ namespace TemperatureSensor.WebUI.Controllers
         [AllowAnonymous]
         [ResponseCache(Location = ResponseCacheLocation.Any, Duration = 60)]
         [HttpGet]
-        public async Task<IEnumerable<Temperature>> Get()
+        public async Task<IEnumerable<HouseIndicator>> Get()
         {
-            var result = await _temperatureRepository.GetTemperature();
+            var result = await _temperatureRepository.Get();
 
             return result;
         }
@@ -31,9 +30,20 @@ namespace TemperatureSensor.WebUI.Controllers
         [HttpPost("temperature/{temperature}/humidity/{humidity}")]
         public async Task<IActionResult> Post(decimal temperature, decimal humidity)
         {
-            await _temperatureRepository.InsertTemperature(temperature, humidity);
+            await _temperatureRepository.Insert(temperature, humidity);
 
             return Ok("Ok");
         }
+
+        /*
+        [Authorize]
+        [HttpPost("randomGenerate")]
+        public async Task<IActionResult> Post()
+        {
+            await _temperatureRepository.InsertRandom(10);
+
+            return Ok("Ok");
+        }
+        */
     }
 }

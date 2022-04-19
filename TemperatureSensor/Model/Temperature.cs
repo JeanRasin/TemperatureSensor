@@ -1,6 +1,6 @@
 namespace TemperatureSensor.WebUI.Model
 {
-    public class Temperature
+    public class HouseIndicator
     {
         public int Id { get; set; }
 
