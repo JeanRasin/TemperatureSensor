@@ -3,6 +3,9 @@ using TemperatureSensor.WebUI.DAL.Repositories.Concrete;
 using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Authentication;
 using TemperatureSensor.WebUI.Authorization;
+using Microsoft.OpenApi.Models;
+using AspNetCore.Authentication.Basic;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,10 +26,36 @@ builder.Services.AddScoped(_ => new SqliteConnection(connectionString));
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
 // Basic authentication
-builder.Services.AddAuthentication("BasicAuthentication")
-                .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>
-                ("BasicAuthentication", null);
-builder.Services.AddAuthorization();
+//builder.Services.AddAuthentication("BasicAuthentication")
+//                .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>
+//                ("BasicAuthentication", null);
+
+
+builder.Services.AddAuthentication(BasicDefaults.AuthenticationScheme)
+
+    // The below AddBasic without type parameter will require OnValidateCredentials delegete on options.Events to be set unless an implementation of IBasicUserValidationService interface is registered in the dependency register.
+    // Please note if both the delgate and validation server are set then the delegate will be used instead of BasicUserValidationService.
+    //.AddBasic(options =>
+
+    // The below AddBasic with type parameter will add the BasicUserValidationService to the dependency register. 
+    // Please note if OnValidateCredentials delegete on options.Events is also set then this delegate will be used instead of BasicUserValidationService.
+    .AddBasic<BasicUserValidationService>(options =>
+    {
+    options.Realm = "Temperature Web API";
+    options.Events = new BasicEvents
+        {
+    };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
+
+
+//builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -44,18 +73,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+//app.UseDefaultFiles();
 app.UseRouting();
 
-// Startup.Configure()
-//app.UseEndpoints(endpoints =>
-//{
-//    //endpoints.MapControllers();
-
-//    // route non-api urls to index.html
-//    endpoints.MapFallbackToFile("/index.html");
-//});
-
-app.MapFallbackToFile("/index.html");
+//app.MapFallbackToFile("index.html");
 
 // global cors policy
 app.UseCors(x => x
@@ -63,8 +84,8 @@ app.UseCors(x => x
     .AllowAnyMethod()
     .AllowAnyHeader());
 
-//app.UseAuthentication();
-//app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

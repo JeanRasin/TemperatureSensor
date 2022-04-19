@@ -5,6 +5,7 @@ using TemperatureSensor.WebUI.Model;
 
 namespace TemperatureSensor.WebUI.Controllers
 {
+    //
     [Route("api/[controller]")]
     [ApiController]
     public class TemperatureController : ControllerBase
@@ -16,7 +17,7 @@ namespace TemperatureSensor.WebUI.Controllers
             _temperatureRepository = temperatureRepository;
         }
 
-        // [AllowAnonymous]
+        [AllowAnonymous]
         [ResponseCache(Location = ResponseCacheLocation.Any, Duration = 60)]
         [HttpGet]
         public async Task<IEnumerable<Temperature>> Get()
@@ -26,7 +27,7 @@ namespace TemperatureSensor.WebUI.Controllers
             return result;
         }
 
-       // [Authorize]
+        [Authorize]
         [HttpPost("temperature/{temperature}/humidity/{humidity}")]
         public async Task<IActionResult> Post(decimal temperature, decimal humidity)
         {
