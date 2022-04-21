@@ -1,2 +1,7 @@
-# TemperatureSensor
-Temperature sensor
+# Мониторинг температуры на TINY GSM MODEM SIM800 с GPRS
+
+Мониторинг температуры и влажности (AM2320) на TINY GSM MODEM SIM800 с передачей и приему данных по каналу GPRS (sim800l). Вывод статистики в виде графика на сервере.
+
+../arduino_source - исходный код для Arduino
+
+../WebServer - исходный код сервера
