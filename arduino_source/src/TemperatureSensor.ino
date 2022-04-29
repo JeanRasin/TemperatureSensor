@@ -12,6 +12,9 @@
 #include <iarduino_AM2320.h>
 #include <SoftwareSerial.h>
 
+// Enable library for reading and writing from/to flash memory
+#include <EEPROM.h>
+
 // Set serial for debug console (to the Serial Monitor, default speed 115200)
 #define SerialMon Serial
 // Set serial for AT commands (to the module)
@@ -27,8 +30,8 @@
 // Range to attempt to autobaud
 // NOTE:  DO NOT AUTOBAUD in production code.  Once you've established
 // communication, set a fixed baud rate using modem.setBaud(#).
-#define GSM_AUTOBAUD_MIN 9600
-#define GSM_AUTOBAUD_MAX 115200
+//#define AUTOBAUD_MIN 9600
+#define AUTOBAUD_MAX 115200
 
 // Add a reception delay, if needed.
 // This may be needed for a fast processor at a slow baud rate.
@@ -39,10 +42,25 @@
 #define TINY_GSM_USE_GPRS true
 #define TINY_GSM_USE_WIFI false
 
-// set GSM PIN, if any
+// Set GSM PIN, if any
 #define GSM_PIN ""
 
-// flag to force SSL client authentication, if needed
+// Define the number of bytes you want to access
+#define EEPROM_SIZE 3
+
+// Delay minutes
+#define DELAY_MINUTES 1
+
+// Max SMS per day
+#define SEND_SMS_MAX_DAY 2
+
+// Minimum temperature for warning
+#define TEMPERATURE_MIN 10
+
+// Maximum temperature for warning
+#define TEMPERATURE_MAX 40
+
+// Flag to force SSL client authentication, if needed
 // #define TINY_GSM_SSL_CLIENT_AUTHENTICATION
 
 // Your GPRS credentials, if any
@@ -54,23 +72,15 @@ const char gprsPass[] = "";
 const char wifiSSID[] = "YourSSID";
 const char wifiPass[] = "YourWiFiPass";
 
-// Replace with the number of the controlling phone
-const String myPhoneNum = "+79197181453";
-
-// Delay minutes
-const int delayMinutes = 5;
-
-// Minimum temperature for warning
-const int temperatureMin = 10;
-
-// Maximum temperature for warning
-const int temperatureMax = 40;
-
 // Authorization basic
 const String authorizationValue = "Basic YWRtaW46YWRtaW4=";
 
 // Web server url
-String webServerUrl = "http://jeanrasin-001-site1.itempurl.com/api/Temperature/temperature/{temperature}/humidity/{humidity}";
+const String webServerUrl = "http://jeanrasin-001-site1.itempurl.com/api/Temperature/temperature/{temperature}/humidity/{humidity}";
+
+struct Date {
+  byte year, month, day, hour;
+};
 
 #include <TinyGsmClient.h>
 #include <ArduinoHttpClient.h>
@@ -100,6 +110,9 @@ TinyGsm modem(SerialAT);
 // Initializing the sensor
 iarduino_AM2320 sensor;
 
+// Replace with the number of the controlling phone
+String myPhoneNum = "+79197181453";
+
 void setupModem()
 {
 #ifdef MODEM_RST
@@ -126,10 +139,15 @@ void setupModem()
   digitalWrite(LED_GPIO, LED_OFF);
 }
 
-bool Bearing_set();
-bool Https_get();
-bool Close_serve();
-void Send_sms(String smsMessage);
+bool BearingSet();
+bool HttpTemperature(float temperature, float humidity);
+bool CloseServe();
+void SendSms(String smsMessage, int day, int hour, int count);
+void SendSmsVerification(String smsMessage);
+void SetAutoTimeSync();
+String GetDateTime();
+Date GetDate();
+void GetHttpResponse();
 
 void setup() {
 
@@ -137,32 +155,26 @@ void setup() {
   sensor.begin();
 
   // Set console baud rate
-  SerialMon.begin(115200);
+  Serial.begin(AUTOBAUD_MAX);
 
   delay(10);
 
-  // !!!!!!!!!!!
-  // Set your reset, enable, power pins here
-  // !!!!!!!!!!!
-
-  SerialMon.println("Wait...");
-
   // Set GSM module baud rate
   // Set GSM module baud rate and UART pins
-  SerialAT.begin(115200, SERIAL_8N1, MODEM_RX, MODEM_TX);
+  SerialAT.begin(AUTOBAUD_MAX, SERIAL_8N1, MODEM_RX, MODEM_TX);
 
   setupModem();
   delay(6000);
 
   // Restart takes quite some time
   // To skip it, call init() instead of restart()
-  SerialMon.println("Initializing modem...");
+  Serial.println("Initializing modem...");
   modem.restart();
   // modem.init();
 
   String modemInfo = modem.getModemInfo();
-  SerialMon.print("Modem Info: ");
-  SerialMon.println(modemInfo);
+  Serial.print("Modem Info: ");
+  Serial.println(modemInfo);
 
 #if TINY_GSM_USE_GPRS
   // Unlock your SIM card with a PIN if needed
@@ -170,18 +182,30 @@ void setup() {
     modem.simUnlock(GSM_PIN);
   }
 #endif
+
+  // Initialize EEPROM with predefined size
+  EEPROM.begin(EEPROM_SIZE);
+
+  // Synchronizing time
+  SetAutoTimeSync();
+
+  // Clear flash memory
+  // EEPROM.write(0, 0);
+  // EEPROM.write(1, -1);
+  // EEPROM.write(2, 0);
+  // EEPROM.commit();
 }
 
 void loop() {
 #if TINY_GSM_USE_WIFI
   // Wifi connection parameters must be set before waiting for the network
-  SerialMon.print(F("Setting SSID/password..."));
+  Serial.print(F("Setting SSID/password..."));
   if (!modem.networkConnect(wifiSSID, wifiPass)) {
-    SerialMon.println(" fail");
+    Serial.println(" fail");
     delay(10000);
     return;
   }
-  SerialMon.println(" success");
+  Serial.println(" success");
 #endif
 
 #if TINY_GSM_USE_GPRS && defined TINY_GSM_MODEM_XBEE
@@ -189,70 +213,70 @@ void loop() {
   modem.gprsConnect(apn, gprsUser, gprsPass);
 #endif
 
-  SerialMon.print("Waiting for network...");
+  Serial.print("Waiting for network...");
   if (!modem.waitForNetwork()) {
-    SerialMon.println(" fail");
+    Serial.println(" fail");
     delay(10000);
     return;
   }
-  SerialMon.println(" success");
+  Serial.println(" success");
 
   if (modem.isNetworkConnected()) {
-    SerialMon.println("Network connected");
+    Serial.println("Network connected");
   }
 
 #if TINY_GSM_USE_GPRS
   // GPRS connection parameters are usually set after network registration
-  SerialMon.print(F("Connecting to "));
-  SerialMon.print(apn);
+  Serial.print(F("Connecting to "));
+  Serial.print(apn);
   if (!modem.gprsConnect(apn, gprsUser, gprsPass)) {
-    SerialMon.println(" fail");
+    Serial.println(" fail");
     delay(10000);
     return;
   }
-  SerialMon.println(" success");
+  Serial.println(" success");
 
   if (modem.isGprsConnected()) {
-    SerialMon.println("GPRS connected");
+    Serial.println("GPRS connected");
   }
 #endif
 
-  switch (sensor.read()) {                                                      // Читаем показания датчика.
+  switch (sensor.read()) {                                                      // We read the sensor readings.
     case AM2320_OK:         Serial.println((String) "Sensor AM2320:  T=" + sensor.tem + "*C, PH=" + sensor.hum + "%");  break;
-    case AM2320_ERROR_LEN:  Serial.println("Sending is not possible.");     break;     // объем передаваемых данных превышает буфер I2C
-    case AM2320_ERROR_ADDR: Serial.println("No sensor.");           break;     // получен NACK при передаче адреса датчика
-    case AM2320_ERROR_DATA: Serial.println("Sending is not possible.");     break;     // получен NACK при передаче данных датчику
-    case AM2320_ERROR_SEND: Serial.println("Sending is not possible.");     break;     // ошибка при передаче данных
-    case AM2320_ERROR_READ: Serial.println("No response from sensor."); break;     // получен пустой ответ датчика
-    case AM2320_ERROR_ANS:  Serial.println("Answer is incorrect.");     break;     // ответ датчика не соответствует запросу
-    case AM2320_ERROR_LINE: Serial.println("CRC does not match.");       break;     // помехи в линии связи (не совпадает CRC)
+    case AM2320_ERROR_LEN:  Serial.println("Sending is not possible.");     break;     // The amount of transmitted data exceeds the I2C buffer.
+    case AM2320_ERROR_ADDR: Serial.println("No sensor.");           break;     // NACK received while transmitting sensor address.
+    case AM2320_ERROR_DATA: Serial.println("Sending is not possible.");     break;     // Received NACK while transmitting data to the sensor.
+    case AM2320_ERROR_SEND: Serial.println("Sending is not possible.");     break;     // Data transfer error.
+    case AM2320_ERROR_READ: Serial.println("No response from sensor."); break;     // Empty sensor response received.
+    case AM2320_ERROR_ANS:  Serial.println("Answer is incorrect.");     break;     // Sensor response does not match request.
+    case AM2320_ERROR_LINE: Serial.println("CRC does not match.");       break;     // Interference in the communication line (CRC does not match).
   }
 
-  SerialMon.print(F("Performing HTTP GET request... "));
+  Serial.print(F("Performing HTTP GET request... "));
 
-  if (Bearing_set() == false) SerialMon.println("Bearing set fall");
+  if (BearingSet() == false) Serial.println("Bearing set fall");
 
-  if (Http_temperature(sensor.tem, sensor.hum) == false) {
-    SerialMon.println("Insert temperature fall");
+  if (HttpTemperature(sensor.tem, sensor.hum) == false) {
+    Serial.println("Insert temperature fall");
   }
 
-  Close_serve();
+  CloseServe();
 
 #if TINY_GSM_USE_WIFI
   modem.networkDisconnect();
-  SerialMon.println(F("WiFi disconnected"));
+  Serial.println(F("WiFi disconnected"));
 #endif
 #if TINY_GSM_USE_GPRS
   modem.gprsDisconnect();
-  SerialMon.println(F("GPRS disconnected"));
+  Serial.println(F("GPRS disconnected"));
 #endif
 
   // Delay in milliseconds
-  delay(delayMinutes * 60 * 1000);
+  delay(DELAY_MINUTES * 60 * 1000);
 }
 
 //Bearing set
-bool Bearing_set() {
+bool BearingSet() {
 
   // Configuring Bearer Scenarios
   modem.sendAT(GF("+HTTPTERM"));
@@ -293,7 +317,7 @@ bool Bearing_set() {
   delay(2000);
 }
 
-bool Http_temperature(float temperature, float humidity) {
+bool HttpTemperature(float temperature, float humidity) {
 
   // Initialize the HTTP service
   modem.sendAT(GF("+HTTPINIT"));
@@ -309,23 +333,22 @@ bool Http_temperature(float temperature, float humidity) {
     return false;
   }
 
-  // Set authorization
+  // Set basic authorization
   modem.sendAT(GF("+HTTPPARA=\"USERDATA\",\"Authorization: " + authorizationValue + "\""));
   if (modem.waitResponse(10000L) != 1) {
     DBG(GF("+HTTPPARA=\"USERDATA\",\"Authorization: " + authorizationValue + "\""));
     return false;
   }
 
-  String temperatureStr = String(temperature, 1);
-  webServerUrl.replace("{temperature}", temperatureStr);
-  
-  String humidityStr = String(humidity, 1);
-  webServerUrl.replace("{humidity}", humidityStr);
+  String url = webServerUrl;
+
+  url.replace("{temperature}", String(temperature, 1));
+  url.replace("{humidity}", String(humidity, 1));
 
   // Set HTTP session parameters
-  modem.sendAT(GF("+HTTPPARA=\"URL\",\"" + webServerUrl + "\""));
-  if (modem.waitResponse(10000L) != 1) {
-    DBG(GF("+HTTPPARA=\"URL\",\"" + webServerUrl + "\""));
+  modem.sendAT(GF("+HTTPPARA=\"URL\",\"" + url + "\""));
+  if (modem.waitResponse(10000L) != 1) {//, res
+    DBG(GF("+HTTPPARA=\"URL\",\"" + url + "\""));
     return false;
   }
 
@@ -344,22 +367,25 @@ bool Http_temperature(float temperature, float humidity) {
     DBG(GF("+HTTPREAD"));
     return false;
   }
+  delay(10000);
+
+  GetHttpResponse();
 
   delay(1000);
 
-  if (temperature <= temperatureMin) {
-    String smsMessage = "Warning. Temperature below " + String(temperatureMin) + " degrees.";
-    Send_sms(smsMessage);
+  if (temperature <= TEMPERATURE_MIN) {
+    String smsMessage = "Warning. Temperature below " + String(TEMPERATURE_MIN) + " degrees.";
+    SendSmsVerification(smsMessage);
   }
 
-  if (temperature > temperatureMax) {
-    String smsMessage = "Warning. Temperature abow " + String(temperatureMax) + " degrees.";
-    Send_sms(smsMessage);
+  if (temperature > TEMPERATURE_MAX) {
+    String smsMessage = "Warning. Temperature abow " + String(TEMPERATURE_MAX) + " degrees.";
+    SendSmsVerification(smsMessage);
   }
 
 }
 
-bool Close_serve() {
+bool CloseServe() {
 
   delay(5000);
 
@@ -380,13 +406,119 @@ bool Close_serve() {
   }
 }
 
-void Send_sms(String smsMessage) {
+void SendSms(String smsMessage, int day, int hour, int count) {
+
   // To send an SMS, call modem.sendSMS(SMS_TARGET, smsMessage)
-  // String smsMessage = "Hello from ESP32!";
   if (modem.sendSMS(myPhoneNum, smsMessage)) {
-    SerialMon.println(smsMessage);
+    EEPROM.write(0, day);
+    EEPROM.write(1, hour);
+    EEPROM.write(2, count);
+    EEPROM.commit();
+
+    Serial.println(smsMessage);
   }
   else {
-    SerialMon.println("SMS failed to send");
+    Serial.println("SMS failed to send");
   }
+}
+
+void SendSmsVerification(String smsMessage) {
+  byte day = EEPROM.read(0);
+  byte hour = EEPROM.read(1);
+  byte count = EEPROM.read(2);
+
+  Serial.println("EEPROM. Day: " + String(day) + ", hour: " + String(hour) + ", count: " + String(count));
+
+  Date date = GetDate();
+
+  if (date.day == day && hour != date.hour && count < SEND_SMS_MAX_DAY) {
+    count += 1;
+    SendSms(smsMessage, date.day, date.hour, count);
+  } else if (date.day != day) {
+    EEPROM.write(0, date.day);
+    EEPROM.write(1, -1);
+    EEPROM.write(2, 0);
+    EEPROM.commit();
+  }
+
+}
+
+void SetAutoTimeSync()
+{
+  Serial.println("Enable GSM RTC network time sync.");
+  modem.sendAT(GF("+CLTS=1"));
+  if (modem.waitResponse(10000L) != 1)
+  {
+    Serial.println("AT command \"AT+CLTS=1\" executing fault.");;
+  }
+
+  modem.sendAT(GF("&W"));
+  modem.waitResponse();
+
+  modem.sendAT(GF("+CFUN=0"));
+  if (modem.waitResponse(10000L) != 1)
+  {
+    Serial.println("AT command \"AT+CFUN=0\" executing fault.");;
+  }
+
+  modem.sendAT(GF("+CFUN=1"));
+  if (modem.waitResponse(10000L, GF(GSM_NL "DST:")) != 1)
+  {
+    Serial.println("AT command \"AT+CFUN=1\" executing fault.");
+  }
+
+  Serial.println("DateTime: " + GetDateTime());
+}
+
+String GetDateTime()
+{
+  modem.sendAT(GF("+CCLK?"));
+  if (modem.waitResponse(10000L, GF(GSM_NL "+CCLK:")))
+  {
+    String body = modem.stream.readStringUntil('\n');
+    return body;
+  }
+  else
+  {
+    Serial.println("AT command \"+CCLK?\" executing fault.");
+  }
+  return "";
+}
+
+Date GetDate()
+{
+  // Return "22/04/26,10:59:21+20"
+  String dateStr = GetDateTime();
+
+  Date date;
+
+  date.year = (dateStr.substring(2, 4)).toInt();
+  date.month = (dateStr.substring(5, 7)).toInt();
+  date.day = (dateStr.substring(8, 10)).toInt();
+  date.hour = (dateStr.substring(11, 13)).toInt();
+
+  Serial.println("DateTime: " + dateStr);
+  Serial.println("Date. Year:" + String(date.year) + ", month:" + String(date.month) + ", day:" + String(date.day) + ", hour:" + String(date.hour));
+
+  return date;
+}
+
+void GetHttpResponse()
+{
+  String httpResponse = "";
+
+  if (SerialAT.available()) {
+    httpResponse = SerialAT.readString();
+  }
+
+  // +HTTPACTION: 1,200,2
+  String httpCode =  httpResponse.substring(17, 20);
+
+  Serial.println("Http code: " + httpCode);
+
+  if (httpCode != "200") {
+    String smsMessage = "Warning. Web server not responding.";
+    SendSmsVerification(smsMessage);
+  }
+
 }
