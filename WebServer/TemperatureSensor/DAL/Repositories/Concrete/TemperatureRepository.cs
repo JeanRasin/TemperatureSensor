@@ -8,12 +8,12 @@ namespace TemperatureSensor.WebUI.DAL.Repositories.Concrete
     public class TemperatureRepository : ITemperatureRepository
     {
         private readonly SqliteConnection _sqliteConnection;
-        private readonly IConfiguration _сonfiguration;
+        private readonly ISettings _settings;
 
-        public TemperatureRepository(SqliteConnection sqliteConnection, IConfiguration сonfiguration)
+        public TemperatureRepository(SqliteConnection sqliteConnection, ISettings settings)
         {
             _sqliteConnection = sqliteConnection;
-            _сonfiguration = сonfiguration;
+            _settings = settings;
         }
 
         public async Task<IEnumerable<HouseIndicator>> Get()
@@ -23,13 +23,12 @@ namespace TemperatureSensor.WebUI.DAL.Repositories.Concrete
                 await ClearDB();
             }
 
-            // Discreteness in minutes
-            IConfigurationSection? discret = _сonfiguration.GetSection("Discreteness");
+            Settings? discret = await _settings.Get();
 
             // 1440 minutes per day
             const int minitPerDay = 24 * 60; 
 
-            var limit = Convert.ToInt32(minitPerDay / Convert.ToInt32(discret.Value));
+            var limit = Convert.ToInt32(minitPerDay / discret.DelayMinutes);
 
             var sql = $"SELECT Id, Date, TemperatureData, Humidity FROM Temperature ORDER BY Id DESC LIMIT {limit}";
 

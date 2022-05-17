@@ -18,6 +18,7 @@ builder.Services.AddSwaggerGen();
 
 // Configure DI for application services
 builder.Services.AddScoped<ITemperatureRepository, TemperatureRepository>();
+builder.Services.AddScoped<ISettings, SettingsRepository>();
 builder.Services.AddScoped(_ => new SqliteConnection(connectionString));
 
 // Add the whole configuration object here.

@@ -10,10 +10,12 @@ namespace TemperatureSensor.WebUI.Controllers
     public class TemperatureController : ControllerBase
     {
         private readonly ITemperatureRepository _temperatureRepository;
+        private readonly ISettings _settings;
 
-        public TemperatureController(ITemperatureRepository temperatureRepository)
+        public TemperatureController(ITemperatureRepository temperatureRepository, ISettings settings)
         {
             _temperatureRepository = temperatureRepository;
+            _settings = settings;
         }
 
         [AllowAnonymous]
@@ -21,7 +23,7 @@ namespace TemperatureSensor.WebUI.Controllers
         [HttpGet]
         public async Task<IEnumerable<HouseIndicator>> Get()
         {
-            var result = await _temperatureRepository.Get();
+            IEnumerable<HouseIndicator>? result = await _temperatureRepository.Get();
 
             return result;
         }
@@ -32,7 +34,9 @@ namespace TemperatureSensor.WebUI.Controllers
         {
             await _temperatureRepository.Insert(temperature, humidity);
 
-            return Ok("Ok");
+            Settings? result = await _settings.Get();
+
+            return Ok(result);
         }
 
         /*

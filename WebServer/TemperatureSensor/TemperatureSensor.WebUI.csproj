@@ -20,4 +20,10 @@
 	<PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="temperature.db">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
