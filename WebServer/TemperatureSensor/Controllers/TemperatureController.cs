@@ -29,8 +29,8 @@ namespace TemperatureSensor.WebUI.Controllers
         }
 
         [Authorize]
-        [HttpPost("temperature/{temperature}/humidity/{humidity}")]
-        public async Task<IActionResult> Post(decimal temperature, decimal humidity)
+        [HttpPost]
+        public async Task<IActionResult> Post([FromForm] decimal temperature, [FromForm] decimal humidity)
         {
             await _temperatureRepository.Insert(temperature, humidity);
 

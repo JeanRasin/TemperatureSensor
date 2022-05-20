@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TemperatureSensorAndroid.Views.TemperatureTable"
+             xmlns:vm="clr-namespace:TemperatureSensorAndroid.ViewModels"
+             Title="{Binding Title}">
+
+    <ContentPage.BindingContext>
+        <vm:TemperatureTableViewModel />
+    </ContentPage.BindingContext>
+
+    <Grid>
+        <ScrollView>
+            <StackLayout Orientation="Vertical" Spacing="10">
+                <WebView x:Name="urlChartWebView" Source="{Binding UrlPath}" VerticalOptions="FillAndExpand" />
+            </StackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

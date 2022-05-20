@@ -6,6 +6,6 @@ namespace TemperatureSensor.WebUI.DAL.Repositories.Abstract
     {
         Task<Settings> Get();
 
-        Task UpdateValue(string key, string value);
+        Task Update(Settings settings);
     }
 }

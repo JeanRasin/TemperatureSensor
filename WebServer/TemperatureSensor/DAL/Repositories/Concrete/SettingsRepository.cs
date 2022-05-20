@@ -23,11 +23,20 @@ namespace TemperatureSensor.WebUI.DAL.Repositories.Concrete
             return result;
         }
 
-        public async Task UpdateValue(string key, string value)
+        public async Task Update(Settings settings)
         {
-            var sql = $"UPDATE Settings SET {key} = {value}";
+            var sql = $"UPDATE Settings SET DelayMinutes = @DelayMinutes, SendSmsMaxDay = @SendSmsMaxDay, TemperatureMin = @TemperatureMin, TemperatureMax = @TemperatureMax, UrlChart = @UrlChart, UrlTable = @UrlTable";
 
-            await _sqliteConnection.QueryAsync(sql);
+            var parms = new {
+                settings.DelayMinutes,
+                settings.SendSmsMaxDay,
+                settings.TemperatureMin,
+                settings.TemperatureMax,
+                settings.UrlChart,
+                settings.UrlTable
+            };
+
+            await _sqliteConnection.QueryAsync(sql, parms);
         }
 
     }

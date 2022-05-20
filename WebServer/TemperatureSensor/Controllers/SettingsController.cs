@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TemperatureSensor.WebUI.DAL.Repositories.Abstract;
+using TemperatureSensor.WebUI.Model;
 
 namespace TemperatureSensor.WebUI.Controllers
 {
@@ -16,10 +17,19 @@ namespace TemperatureSensor.WebUI.Controllers
         }
 
         [Authorize]
-        [HttpPut("key/{key}/value/{value}")]
-        public async Task<IActionResult> Put(string key, string value)
+        [HttpGet]
+        public async Task<IActionResult> Get()
         {
-            await _settings.UpdateValue(key, value);
+            Settings? settings = await _settings.Get();
+
+            return Ok(settings);
+        }
+
+        [Authorize]
+        [HttpPut]
+        public async Task<IActionResult> Put(Settings data)
+        {
+            await _settings.Update(data);
 
             return Ok();
         }

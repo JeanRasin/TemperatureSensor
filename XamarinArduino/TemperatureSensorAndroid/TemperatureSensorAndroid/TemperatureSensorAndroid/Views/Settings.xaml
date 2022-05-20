@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TemperatureSensorAndroid.Views.Settings"
+             xmlns:vm="clr-namespace:TemperatureSensorAndroid.ViewModels"
+             Title="{Binding Title}">
+
+    <ContentPage.BindingContext>
+        <vm:ChartViewModel />
+    </ContentPage.BindingContext>
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Color x:Key="Accent">#96d1ff</Color>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid Padding="10">
+        <ScrollView>
+            <StackLayout Orientation="Vertical">
+                <Label Text="Задержка в минутах" FontSize="Medium" />
+                <Entry Text="{Binding DelayMinutes, Mode=TwoWay}" Keyboard="Numeric" FontSize="Medium" />
+                <Label Text="Максимальное количество SMS в день" FontSize="Medium" />
+                <Entry Text="{Binding SendSmsMaxDay, Mode=TwoWay}" Keyboard="Numeric" FontSize="Medium" />
+                <Label Text="Температура ниже которой предупреждать по SMS" FontSize="Medium" />
+                <Entry Text="{Binding TemperatureMin, Mode=TwoWay}" Keyboard="Numeric" FontSize="Medium" />
+                <Label Text="Температура выше которой предупреждать по SMS" FontSize="Medium" />
+                <Entry Text="{Binding TemperatureMax, Mode=TwoWay}" Keyboard="Numeric" FontSize="Medium" />
+                <Label Text="Url графика" FontSize="Medium" />
+                <Entry Text="{Binding UrlChart, Mode=TwoWay}" Keyboard="Url" FontSize="Medium" />
+                <Label Text="Url таблицы" FontSize="Medium" />
+                <Entry Text="{Binding UrlTable, Mode=TwoWay}" Keyboard="Url" FontSize="Medium" />
+                <Button x:Name="SaveSettings" Text="Сохранить" Command="{Binding SaveCommand}" />
+            </StackLayout>
+        </ScrollView>
+    </Grid>
+
+</ContentPage>

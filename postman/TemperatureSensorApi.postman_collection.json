@@ -1,0 +1,297 @@
+{
+	"info": {
+		"_postman_id": "72c6ef8e-f4a3-42d9-af61-9a87012beca1",
+		"name": "TemperatureSensorApi",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "19323201"
+	},
+	"item": [
+		{
+			"name": "Sharkasp.net",
+			"item": [
+				{
+					"name": "Temperature",
+					"item": [
+						{
+							"name": "Get",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://jeanrasin-001-site1.itempurl.com/api/Temperature",
+									"protocol": "http",
+									"host": [
+										"jeanrasin-001-site1",
+										"itempurl",
+										"com"
+									],
+									"path": [
+										"api",
+										"Temperature"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Insert",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://jeanrasin-001-site1.itempurl.com/api/Temperature/temperature/21.6/humidity/51.40",
+									"protocol": "http",
+									"host": [
+										"jeanrasin-001-site1",
+										"itempurl",
+										"com"
+									],
+									"path": [
+										"api",
+										"Temperature",
+										"temperature",
+										"21.6",
+										"humidity",
+										"51.40"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Settings",
+					"item": [
+						{
+							"name": "Get",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://jeanrasin-001-site1.itempurl.com/api/Settings",
+									"protocol": "http",
+									"host": [
+										"jeanrasin-001-site1",
+										"itempurl",
+										"com"
+									],
+									"path": [
+										"api",
+										"Settings"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Put",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"delayMinutes\": 2,\r\n    \"sendSmsMaxDay\": 3,\r\n    \"temperatureMin\": 10,\r\n    \"temperatureMax\": 40,\r\n    \"urlChart\": \"http://jeanrasin-001-site1.itempurl.com/block/chart/index.html\",\r\n    \"urlTable\": \"http://jeanrasin-001-site1.itempurl.com/block/table/index.html\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://jeanrasin-001-site1.itempurl.com/api/Settings",
+									"protocol": "http",
+									"host": [
+										"jeanrasin-001-site1",
+										"itempurl",
+										"com"
+									],
+									"path": [
+										"api",
+										"Settings"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "TemperatureSensor",
+			"item": [
+				{
+					"name": "Temperature",
+					"item": [
+						{
+							"name": "Get",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:5297/api/Temperature",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "5297",
+									"path": [
+										"api",
+										"Temperature"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "InsertRandom",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:5297/api/Temperature/randomGenerate",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "5297",
+									"path": [
+										"api",
+										"Temperature",
+										"randomGenerate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Insert",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "temperature",
+											"value": "32,60",
+											"type": "text"
+										},
+										{
+											"key": "humidity",
+											"value": "58,40",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:5297/api/Temperature",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "5297",
+									"path": [
+										"api",
+										"Temperature"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Settings",
+					"item": [
+						{
+							"name": "Put",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"delayMinutes\": 2,\r\n    \"sendSmsMaxDay\": 3,\r\n    \"temperatureMin\": 10,\r\n    \"temperatureMax\": 40,\r\n    \"urlChart\": \"http://jeanrasin-001-site1.itempurl.com/block/chart/index.html\",\r\n    \"urlTable\": \"http://jeanrasin-001-site1.itempurl.com/block/table/index.html\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:5297/api/Settings",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "5297",
+									"path": [
+										"api",
+										"Settings"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:5297/api/Settings",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "5297",
+									"path": [
+										"api",
+										"Settings"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "username",
+				"value": "admin",
+				"type": "string"
+			},
+			{
+				"key": "password",
+				"value": "admin",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
