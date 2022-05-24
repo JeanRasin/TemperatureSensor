@@ -155,36 +155,7 @@ void setup() {
   // Sensor begin
   sensor.begin();
 
-  // Set console baud rate
-  //Serial.begin(AUTOBAUD_MAX);
-
   InitGSM_SIM800();
-
-  // delay(10);
-
-  // Set GSM module baud rate
-  // Set GSM module baud rate and UART pins
-  // SerialAT.begin(AUTOBAUD_MAX, SERIAL_8N1, MODEM_RX, MODEM_TX);
-
-  // SetupModem();
-  // delay(6000);
-
-  // Restart takes quite some time
-  // To skip it, call init() instead of restart()
-  // Serial.println("Initializing modem...");
-  // modem.restart();
-  // modem.init();
-
-  // String modemInfo = modem.getModemInfo();
-  // Serial.print("Modem Info: ");
-  // Serial.println(modemInfo);
-
-#if TINY_GSM_USE_GPRS
-  // Unlock your SIM card with a PIN if needed
-  // if (SIM_PIN && modem.getSimStatus() != 3) {
-  // modem.simUnlock(SIM_PIN);
-  // }
-#endif
 
   // Initialize EEPROM with predefined size
   EEPROM.begin(EEPROM_SIZE);
@@ -193,7 +164,7 @@ void setup() {
   SetAutoTimeSync();
 
   delay(3000);
-  /**/
+ 
 #if TINY_GSM_USE_WIFI
   // Wifi connection parameters must be set before waiting for the network
   Serial.print(F("Setting SSID/password..."));
@@ -252,78 +223,9 @@ void setup() {
 }
 
 void loop() {
-  /*#if TINY_GSM_USE_WIFI
-    // Wifi connection parameters must be set before waiting for the network
-    Serial.print(F("Setting SSID/password..."));
-    if (!modem.networkConnect(wifiSSID, wifiPass)) {
-      Serial.println(" fail");
-      delay(10000);
-      return;
-    }
-    Serial.println(" success");
-    #endif
-
-    #if TINY_GSM_USE_GPRS && defined TINY_GSM_MODEM_XBEE
-    // The XBee must run the gprsConnect function BEFORE waiting for network!
-    modem.gprsConnect(apn, gprsUser, gprsPass);
-    #endif
-
-    Serial.print("Waiting for network...");
-    if (!modem.waitForNetwork()) {
-      Serial.println(" fail");
-      delay(10000);
-      return;
-    }
-    Serial.println(" success");
-
-    if (modem.isNetworkConnected()) {
-      Serial.println("Network connected");
-    }
-
-    #if TINY_GSM_USE_GPRS
-    // GPRS connection parameters are usually set after network registration
-    Serial.print(F("Connecting to "));
-    Serial.print(apn);
-    if (!modem.gprsConnect(apn, gprsUser, gprsPass)) {
-      Serial.println(" fail");
-      delay(10000);
-      return;
-    }
-    Serial.println(" success");
-
-    if (modem.isGprsConnected()) {
-      Serial.println("GPRS connected");
-    }
-    #endif*/
-
+ 
   String message = SensorRead();
-  /*switch (sensor.read()) {
-    case AM2320_OK:  // We read the sensor readings.
-      Serial.println((String) "Sensor AM2320:  T=" + sensor.tem + "*C, PH=" + sensor.hum + "%");
-      break;
-    case AM2320_ERROR_LEN:  // The amount of transmitted data exceeds the I2C buffer.
-      message = "Sending is not possible.";
-      break;
-    case AM2320_ERROR_ADDR: // NACK received while transmitting sensor address.
-      message = "No sensor.";
-      break;
-    case AM2320_ERROR_DATA: // Received NACK while transmitting data to the sensor.
-      message = "Sending is not possible.";
-      break;
-    case AM2320_ERROR_SEND: // Data transfer error.
-      message = "Sending is not possible.";
-      break;
-    case AM2320_ERROR_READ: // Empty sensor response received.
-      message = "No response from sensor.";
-      break;
-    case AM2320_ERROR_ANS:  // Sensor response does not match request.
-      message = "Answer is incorrect.";
-      break;
-    case AM2320_ERROR_LINE: // Interference in the communication line (CRC does not match).
-      message = "CRC does not match.";
-      break;
-    }*/
-
+ 
   if (message != "") {
     Serial.println(message);
     SendSmsVerification(message);
@@ -379,18 +281,11 @@ void InitGSM_SIM800() {
 
   Serial.println("Initialize GSM modem...");
 
-  //SerialAT.begin(115200, SERIAL_8N1, MODEM_RX, MODEM_TX);
-
   // Set GSM module baud rate
   // Set GSM module baud rate and UART pins
   SerialAT.begin(AUTOBAUD_MAX, SERIAL_8N1, MODEM_RX, MODEM_TX);
   Serial.println("Serial GSM Txd is on GPIO" + String(MODEM_TX));
   Serial.println("Serial GSM Rxd is on GPIO" + String(MODEM_RX));
-
-  //pinMode(LED_PIN, OUTPUT);
-
-
-  // TinyGsmAutoBaud(SerialAT, AUTOBAUD_MIN, AUTOBAUD_MAX);
 
   SetupModem();
   delay(6000);
@@ -471,52 +366,6 @@ void InitGSM_SIM800() {
   String gsmLoc = modem.getGsmLocation();
   Serial.println("GSM location: " + gsmLoc);
   Serial.println("GSM location: " + SwapLocation(gsmLoc));
-
-
-  /*
-    #if TINY_GSM_USE_WIFI
-      // Wifi connection parameters must be set before waiting for the network
-      Serial.print(F("Setting SSID/password..."));
-      if (!modem.networkConnect(wifiSSID, wifiPass)) {
-      Serial.println(" fail");
-      delay(10000);
-      return;
-      }
-      Serial.println(" success");
-      #endif
-
-      #if TINY_GSM_USE_GPRS && defined TINY_GSM_MODEM_XBEE
-      // The XBee must run the gprsConnect function BEFORE waiting for network!
-      modem.gprsConnect(apn, gprsUser, gprsPass);
-      #endif
-
-      Serial.print("Waiting for network...");
-      if (!modem.waitForNetwork()) {
-      Serial.println(" fail");
-      delay(10000);
-      return;
-      }
-      Serial.println(" success");
-
-      if (modem.isNetworkConnected()) {
-      Serial.println("Network connected");
-      }
-
-      #if TINY_GSM_USE_GPRS
-      // GPRS connection parameters are usually set after network registration
-      Serial.print(F("Connecting to "));
-      Serial.print(apn);
-      if (!modem.gprsConnect(apn, gprsUser, gprsPass)) {
-      Serial.println(" fail");
-      delay(10000);
-      return;
-      }
-      Serial.println(" success");
-
-      if (modem.isGprsConnected()) {
-      Serial.println("GPRS connected");
-      }
-      #endif*/
 }
 
 void RestartGSMModem() {
